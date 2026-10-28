@@ -1,0 +1,127 @@
+<!-- Gutenberg-ready; Day 44; 2026-10-28.
+WP title: 資結 #015｜對稱矩陣為什麼只要存一半？從 Lower Triangle、Row-Major 到一維位址公式看懂 Symmetric Matrix
+SEO title: Symmetric Matrix 對稱矩陣怎麼存？上下三角壓縮與位址公式｜資料結構
+Slug: ds-015-symmetric-matrix-packed-storage-address-formulas
+Excerpt: 從 4×4 對稱矩陣出發，推導下三角與上三角壓縮儲存、Row-Major／Column-Major 位址公式、索引換算與考研常見陷阱。
+Categories: 資料結構, 考研
+Tags: Symmetric Matrix, Packed Storage, Row-Major, Column-Major, Lower Triangle, Upper Triangle
+Status: 待確認／待發布，未取得本次 WordPress 建立文章操作確認。
+-->
+
+<!-- wp:quote --><blockquote class="wp-block-quote"><p>想像學校有四棟教學大樓，紀錄「A 到 B 的直線距離」時，A 到 B 和 B 到 A 應該一樣。若把所有兩兩距離放進表格，上下兩側就會出現大量重複數字。<strong>既然資料相同，為什麼要在記憶體裡存兩次？</strong>這正是 Symmetric Matrix（對稱矩陣）壓縮儲存的出發點。</p></blockquote><!-- /wp:quote -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">一、先認識對稱矩陣：不是所有方陣都對稱</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>對稱矩陣必須是 <strong>n×n 方陣</strong>，而且對任意索引 i、j，都符合 <strong>A[i][j] = A[j][i]</strong>，也就是矩陣轉置後不變（<em>A^T=A</em>）。主對角線上的元素是 A[0][0]、A[1][1] 等，它們在轉置後仍位於原處。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>下面是一個 4×4 對稱矩陣。先不要背公式，觀察 2 和 2、7 和 7、5 和 5 如何沿著主對角線互為鏡像：</p><!-- /wp:paragraph -->
+
+<!-- wp:code --><pre class="wp-block-code"><code>       col0 col1 col2 col3
+row0     4    2    7    1
+row1     2    6    3    5
+row2     7    3    8    9
+row3     1    5    9   10</code></pre><!-- /wp:code -->
+
+<!-- wp:paragraph --><p>特別注意：<strong>對稱不等於元素都一樣</strong>，也不表示對角線必須是零；只要求 A[i][j] 與 A[j][i] 相等。數學上對稱矩陣的定義可參考 Wolfram MathWorld。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">二、只留一半，空間到底省多少？</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>一般 4×4 陣列需要儲存 <em>4^2=16</em> 個元素。如果只保留包含主對角線的<strong>下三角</strong>，每一列分別需要 1、2、3、4 個元素，共 <em>1+2+3+4=10</em> 個。若保留上三角，數量也一樣。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>延伸到 n×n 矩陣，所需元素數為：</p><!-- /wp:paragraph -->
+
+<!-- wp:preformatted --><pre class="wp-block-preformatted">1+2+\cdots+n=\frac{n(n+1)}{2}</pre><!-- /wp:preformatted -->
+
+<!-- wp:paragraph --><p>因此，完整儲存使用 <em>n^2</em> 格；三角壓縮則使用 <em>n(n+1)/2</em> 格。n=4 時節省 6/16＝<strong>37.5%</strong>；n=1000 時從 1,000,000 格變成 500,500 格，節省 <strong>49.95%</strong>。常說「省一半」是大 n 的近似，不是每個尺寸都恰好減半。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">三、下三角 Row-Major：公式從哪裡來？</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>承接上一篇 Matrix Storage：<strong>Row-Major 是一列接著一列存</strong>。下三角只保留 <em>i\ge j</em> 的元素，將上面的 4×4 依列攤平：</p><!-- /wp:paragraph -->
+
+<!-- wp:code --><pre class="wp-block-code"><code>row0:  4
+row1:  2, 6
+row2:  7, 3, 8
+row3:  1, 5, 9, 10
+
+packed = [4, 2, 6, 7, 3, 8, 1, 5, 9, 10]
+index  =  0  1  2  3  4  5  6  7  8   9</code></pre><!-- /wp:code -->
+
+<!-- wp:paragraph --><p>這裡<strong>全部採 0-based index</strong>，即列 i、欄 j 都從 0 開始。要找 A[i][j]，先數前面幾列總共放了多少元素：第 0 列 1 個、第 1 列 2 個，直到第 i−1 列 i 個，所以是 <em>1+2+\cdots+i=i(i+1)/2</em>。接著在第 i 列往右移 j 格：</p><!-- /wp:paragraph -->
+
+<!-- wp:preformatted --><pre class="wp-block-preformatted">\boxed{offset_{lower,row}(i,j)=\frac{i(i+1)}{2}+j},\quad i\ge j</pre><!-- /wp:preformatted -->
+
+<!-- wp:paragraph --><p>例如 A[3][1]＝5：前面三列共 1+2+3＝6 格，再移 1 格，<strong>offset＝7</strong>，正是 packed[7]。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>如果題目問 A[1][3] 呢？它位於沒有儲存的上三角；利用對稱性 A[1][3]＝A[3][1]，<strong>先交換 i、j，再套公式</strong>。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">四、位址題：Offset 不等於實體位址</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>假設 packed 陣列起始位址 B＝1000，每個元素大小 w＝8 bytes。A[1][3] 先映射到 A[3][1]，其 offset＝7，所以：</p><!-- /wp:paragraph -->
+
+<!-- wp:preformatted --><pre class="wp-block-preformatted">Address(A[1][3])=B+w\times offset=1000+8\times7=1056</pre><!-- /wp:preformatted -->
+
+<!-- wp:paragraph --><p>答 <strong>1056</strong>，不是 1007。考試最常見錯誤，是忘了乘上每個元素的 byte 數。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>若題目使用 <strong>1-based index</strong>，且下三角按列儲存，元素 A(i,j) 在壓縮陣列中的 <strong>1-based 位置</strong>為 <em>i(i-1)/2+j</em>（<em>i\ge j</em>）。要算從 B 開始的位址，必須先將位置減 1。<strong>先辨認索引起點，再決定用哪個公式。</strong></p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">五、下三角 Column-Major，以及上三角怎麼辦？</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>如果改成 <strong>Column-Major（逐欄儲存）</strong>，下三角第 0 欄有 n 格、第 1 欄有 n−1 格……第 j 欄之前總共有 <em>jn-j(j-1)/2</em> 格，而 A[i][j] 在此欄的相對位置為 i−j。因此：</p><!-- /wp:paragraph -->
+
+<!-- wp:list --><ul><li><strong>下三角 Row-Major（i≥j）</strong>：<em>i(i+1)/2+j</em>。</li><li><strong>下三角 Column-Major（i≥j）</strong>：<em>jn-j(j-1)/2+(i-j)</em>。</li><li><strong>上三角 Row-Major（i≤j）</strong>：<em>in-i(i-1)/2+(j-i)</em>。</li><li><strong>上三角 Column-Major（i≤j）</strong>：<em>j(j+1)/2+i</em>。</li></ul><!-- /wp:list -->
+
+<!-- wp:paragraph --><p>這四條公式無須死背四次：每次都先算「<strong>前面完整儲存的列／欄有幾個元素</strong>」，再加上「<strong>當前列／欄內偏移</strong>」。例如 n＝4，A[3][1] 的下三角 Column-Major offset＝<em>1\times4-0+(3-1)=6</em>，會不同於 Row-Major 的 7。兩者都正確，只因排列規則不同。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>Intel oneMKL 與 oneAPI 規格明確區分 Upper／Lower 和 Row／Column-Major 的 Packed Storage；<strong>不能看到對稱矩陣，就假設一定按下三角 Row-Major 儲存</strong>。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">六、實作：把「鏡像」當作存取規則</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>最簡單的做法，是把索引映射到下三角，再取出一維陣列的元素：</p><!-- /wp:paragraph -->
+
+<!-- wp:code --><pre class="wp-block-code"><code>def lower_row_major_index(i, j, n):
+    if not (0 &lt;= i &lt; n and 0 &lt;= j &lt; n):
+        raise IndexError("matrix index out of range")
+    if i &lt; j:
+        i, j = j, i   # 上三角鏡射到下三角
+    return i * (i + 1) // 2 + j
+
+packed = [4, 2, 6, 7, 3, 8, 1, 5, 9, 10]
+print(packed[lower_row_major_index(1, 3, 4)])  # 5</code></pre><!-- /wp:code -->
+
+<!-- wp:paragraph --><p>每次讀取只需固定次數的比較與計算，索引映射是 <strong>O(1)</strong>；但改用一維壓縮後，程式必須負責映射，不能直接當成一般二維陣列使用。若要修改 A[1][3]，也要更新那個<strong>唯一保留</strong>的位置，而不是存兩份。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>NumPy 官方提供 tril_indices 等 API，可以取得下三角索引來做選取；不過 <strong>「取得下三角索引」不代表 NumPy 一般 ndarray 自動變成壓縮儲存</strong>，這是表示法與工具功能的差別。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">七、真實應用：省空間未必每次都比較快</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p><strong>距離矩陣、相關係數矩陣、無向圖鄰接矩陣</strong>可能具有對稱性。例如無向圖中兩節點是否相連通常滿足 A[i][j]＝A[j][i]；但若資料是單行道行車時間，A 到 B 不一定等於 B 到 A，就不能硬套對稱壓縮。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>科學運算中的 BLAS／LAPACK 也有 Packed Storage。不過壓縮後的排列方式不見得最適合高效矩陣乘法；因此某些程式會採用完整儲存，或採用 Rectangular Full Packed 等兼顧空間與計算效率的格式。Intel 官方文件也特別解釋了這類權衡。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">八、考研最容易混淆的四件事</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>1. <strong>Symmetric ≠ Triangular</strong>：對稱矩陣的另一半是鏡像值；三角矩陣另一半則為零。它們可以使用相似壓縮方式，但數學意義不同。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>2. <strong>Symmetric ≠ Sparse</strong>：對稱性來自重複資訊；稀疏性來自大量零值。不要把上一篇 Sparse Matrix 的 COO／CSR 公式直接套過來。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>3. <strong>Row-Major ≠ Column-Major</strong>：即使都儲存下三角，同一元素的 offset 也可能不同。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>4. <strong>索引、位置與位址不同</strong>：0-based offset、1-based 位置、byte address 是三個不同概念。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p><strong>考研題型練習</strong>：一個 5×5 的對稱矩陣，採 0-based 下三角 Row-Major 壓縮，B＝2000、w＝4 bytes，求 A[1][4] 的位址。先映射 A[4][1]，offset＝4×5/2+1＝11，故位址＝2000+11×4＝<strong>2044</strong>。若題目改為 Column-Major，要重新計算，不能沿用 11。</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">結論：先理解結構，再推導位址</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>對稱矩陣壓縮的核心只有兩步：<strong>利用 A[i][j]＝A[j][i] 消除重複資料，再依照儲存順序把二維索引轉成一維偏移</strong>。掌握「前面存了幾格＋現在移動幾格」，遠比背四張公式表可靠。下一個 Band Matrix 主題會進一步討論：當矩陣只有主對角線附近的元素有用，該如何避免儲存大量零值？</p><!-- /wp:paragraph -->
+
+<!-- wp:heading {"level":3} --><h3 class="wp-block-heading">References</h3><!-- /wp:heading -->
+
+<!-- wp:paragraph --><p>1. <a href="https://mathworld.wolfram.com/SymmetricMatrix.html">Wolfram MathWorld — Symmetric Matrix</a>：對稱矩陣的定義。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>2. <a href="https://www.intel.com/content/www/us/en/docs/onemkl/developer-reference-c/2026-0/matrix-storage-schemes-for-lapack-routines.html">Intel oneMKL Developer Reference (2026) — Matrix Storage Schemes for LAPACK Routines</a>：Packed Storage 格式與列／欄位址映射。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>3. <a href="https://oneapi-spec.uxlfoundation.org/specifications/oneapi/v1.1-rev-1/elements/onemkl/source/domains/matrix-storage">oneAPI Specification — Matrix Storage</a>：上、下三角逐行／逐欄壓縮順序。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>4. <a href="https://numpy.org/doc/2.3/reference/generated/numpy.tril_indices.html">NumPy v2.3 — numpy.tril_indices</a>：程式取得下三角索引的公開文件。</p><!-- /wp:paragraph -->
+
+<!-- wp:paragraph --><p>5. <a href="https://docs.oracle.com/cd/E19059-01/stud.9/817-6701/plug_matrices.html">Oracle — Working With Matrices</a>：LAPACK Packed Storage 的實例。</p><!-- /wp:paragraph -->
