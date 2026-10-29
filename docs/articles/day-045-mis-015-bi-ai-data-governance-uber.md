@@ -1,0 +1,86 @@
+---
+layout: default
+title: "BI、AI 與 Data Governance 怎麼整合？用 Uber Databook 看懂 MIS 資料決策"
+description: "企業有了 BI 儀表板和 AI 預測，為何仍可能做錯決策？用門市案例、Uber Databook 與 Michelangelo，整合 KPI 定義、資料品質、血緣、模型治理及 MIS 申論答題。"
+date: 2026-10-29
+categories: [MIS, 考研強化]
+tags: [Business Intelligence, AI, Data Governance, KPI, Uber Databook]
+---
+
+# MIS #015｜公司有 BI 儀表板，為什麼 AI 還會做錯決策？從 KPI、Data Governance 到 Uber Databook 的跨章整合
+
+## 一、報表很好看，決策為什麼仍可能出錯？
+
+想像一家連鎖餐飲企業：主管每天打開 BI 儀表板，看見本月「訂單數」成長，AI 也預測週末需求增加，於是決定擴大備料。結果部分門市卻堆滿食材。追查才發現，行銷部的訂單數包含取消訂單，營運部只算完成訂單；AI 訓練時又使用了沒有及時更新的庫存資料。
+
+這是**假設情境，不是任何企業已發生的事件**。它要說明的 MIS 問題是：**有資料、有圖表、有模型，不代表有可信的決策。**若 KPI 定義不一致、資料品質不可靠，AI 可能只是把錯誤快速擴大。本篇承接 MIS #002 的 BI 基礎、#013 的資訊倫理，以及 #014 的策略對齊，練習把三個章節放在同一套決策流程理解。
+
+## 二、BI、AI、Data Governance：各自解決哪個問題？
+
+| 構面 | 核心問題 | 典型產出 | 常見風險 |
+|---|---|---|---|
+| Business Intelligence（BI） | 過去及現在發生什麼？為什麼？ | KPI、報表、異常分析 | 指標口徑不同，得出矛盾結論 |
+| AI／Machine Learning | 接下來可能發生什麼？可如何輔助行動？ | 需求預測、分類、推薦 | 訓練資料偏差、概念漂移、過度自信 |
+| Data Governance（資料治理） | 哪些資料可信、誰能用、誰負責？ | 定義、權責、品質規則、權限與稽核 | 無人維護、來源不明、機敏資料外洩 |
+
+**BI 不等於只有視覺化；AI 也不等於自動決策。**BI 常包含資料整合、分析與報表；AI 能做預測，但是否採取行動仍需要企業政策、成本限制和人員判斷。資料治理不是第三套取代前兩者的系統，而是讓資料從產生、處理到被使用都有管理規則。
+
+IBM 將資料治理定位為維護資料品質、安全性與可用性的組織規範；其中 Data Owner 對資料領域負責，Data Steward 協助落實日常定義、品質與管理規則。治理不只是 IT 部門購買一套工具。[IBM：Data Governance](https://www.ibm.com/think/topics/data-governance)；[IBM：Data Stewardship](https://www.ibm.com/think/topics/data-stewardship)。
+
+## 三、從「訂單」到「決策」：六個環節不能省
+
+**第一步，決定業務問題。**例如「在不提高報廢率的前提下降低缺貨」，不能只說「導入 AI」。先把目標寫成可追蹤的結果：缺貨率、食材報廢率、預測誤差與門市滿意度，並設安全門檻。
+
+**第二步，統一指標口徑。**假設「有效訂單」定義為已完成且未全額退款的訂單，就應明確記錄取消、退款、跨日結算的計算方式。否則同樣叫「營收」，財務和行銷可能指不同數字。這就是常說的 *Single Source of Truth*：重點是**共同認可的定義與可追溯資料**，不代表所有資料都得物理存進同一台伺服器。
+
+**第三步，建立可分析的模型。**以交易為例，Fact Table 可以記錄每筆訂單金額、數量、時間與門市鍵值；Dimension Table 則存產品、門市、日期等描述資訊。Microsoft 的 Power BI Star Schema 指引強調區分事實表與維度表，以利一致的篩選、分組及量值分析。[Microsoft Learn：Star Schema](https://learn.microsoft.com/en-us/power-bi/guidance/star-schema)。
+
+**第四步，檢查資料品質與血緣（Data Lineage）。**除了準確性，也要看完整性、唯一性、一致性與即時性。例如某門市 POS 延遲兩小時上傳，儀表板上「目前庫存」就不能當成即時資料。Lineage 則要回答：「這個指標從哪個來源來？經過哪些 ETL／ELT 轉換？若欄位修改會影響哪個報表與模型？」
+
+**第五步，讓 AI 預測有可驗證的基準。**用歷史資料訓練需求模型，至少應和「沿用上週同期銷量」等簡單方法比較；使用時間切分評估，避免拿未來資訊預測過去。上線後追蹤 MAE 等誤差、模型輸入缺漏、資料分布改變及實際業務結果。**模型準確率好，不等於企業效益一定好。**
+
+**第六步，將預測變成可控行動。**在高報廢風險時，系統可以提出備料建議與理由，由店長核准；超過預算或異常變動時須有人覆核。這樣才形成「資料 → 分析 → 預測 → 決策 → 執行 → 回饋」的閉環，而不是做完 Dashboard 就算成功。
+
+## 四、真實企業案例：Uber 為什麼需要 Databook？
+
+Uber Engineering 在 **2018 年 8 月 3 日**介紹內部資料目錄平台 **Databook**。當時不同業務、分析引擎與團隊產生大量資料，僅知道某張資料表存在還不夠；使用者需要了解它的描述、負責人、更新時間、資料血緣、品質資訊與個資分類。Databook 讓員工能搜尋、理解並更有效地使用內部資料。[Uber Engineering：Databook（2018）](https://www.uber.com/gb/en/blog/databook/)。
+
+在 **2020 年 11 月 10 日**的工程文章中，Uber 進一步說明如何讓 Databook 涵蓋資料集以外的商業指標、報表及資料管線關聯，並強調標準化 metadata 與資料資產間的關係。這個案例的 MIS 重點是：**當 BI 與 AI 使用的資料規模擴大，資料目錄和品質可見性會直接影響分析人員是否找到「對的資料」。**[Uber Engineering：Turning Metadata Into Insights（2020）](https://www.uber.com/us/en/blog/metadata-insights-databook/)。
+
+Uber 也在 **2017 年 9 月 5 日**公開其 ML 平台 **Michelangelo** 的設計，說明資料準備、訓練、評估、部署、預測與監控的端到端流程，並介紹供不同團隊重複使用特徵的 Feature Store。[Uber Engineering：Michelangelo（2017）](https://www.uber.com/gb/en/blog/michelangelo-machine-learning-platform/)。
+
+**注意證據邊界：**上述是 Uber 當年公開的工程實作，不等同於宣稱其 2026 年所有內部系統仍採完全相同架構；也不能據此推論某一項 AI 模型直接使用了某一版 Databook。本文對照兩篇實作，是為了理解「治理資料資產」與「管理模型生命週期」如何相互支援。
+
+## 五、資料治理與 AI 治理，差在哪裡？
+
+資料治理處理的是**資料本身**：定義、所有權、品質、授權、保存及追溯；AI 治理還要處理**模型與使用情境**：偏差、可靠性、說明責任、部署審查及持續監控。兩者重疊但不相同。資料正確也可能產生不公平的模型；模型表現良好也不能合理化違規蒐集資料。
+
+以 NIST 於 **2023 年 1 月 26 日**發布的 **AI RMF 1.0** 為例，框架包含四個相互配合的功能：**GOVERN** 建立政策與責任、**MAP** 理解情境與風險、**MEASURE** 量測風險和可信度、**MANAGE** 決定應對與持續改善。它屬**自願性風險管理框架，不是法律，也不是通過認證就能保證零風險**。[NIST：AI RMF Core](https://airc.nist.gov/airmf-resources/airmf/5-sec-core/)。
+
+門市案例若落地，可以規定：門市主管只讀自己區域的細節資料、資料管理者定期檢查缺漏、模型維護者比較預測與實際、業務主管對自動補貨門檻負責；如果發現品質或公平性問題，應保留暫停自動化與回滾的機制。
+
+## 六、考研易混淆比較與申論題
+
+**易錯 1：Data Warehouse＝Data Governance？**錯。倉儲是資料整合與分析的技術設施，治理還包含人、政策、權責及流程。有倉儲不等於資料已可信。
+
+**易錯 2：BI 比 AI 落後？**錯。兩者回答不同問題。沒有清楚的 KPI 定義與決策需求，再複雜的模型也不一定改善經營。
+
+**易錯 3：Dashboard 指標一致就代表決策有效？**錯。還要檢查資料是否及時、是否反映真正目標、採取行動的成本，以及行動後的結果。衡量可分成 Output（產出報表）、Outcome（縮短補貨決策時間）與 Impact（降低缺貨與報廢）。
+
+**申論練習（15 分，本文自擬，非歷屆考古題）：**「某零售企業已使用 BI 儀表板，計畫再導入 AI 需求預測，卻存在跨部門 KPI 不一致、資料延遲與個資使用爭議。請從 MIS 觀點提出導入方案與績效評估。」
+
+建議以 **4 個構面** 回答：（1）**策略與問題**：界定預測用途和業務 KPI；（2）**資料與技術**：統一指標、處理品質、血緣及模型驗證；（3）**組織與治理**：指定 Data Owner／Steward、設定權限及模型責任；（4）**衡量與改善**：用缺貨率、報廢率、資料新鮮度、預測 MAE 和人員覆核比率追蹤，定期調整。結語回到 MIS 核心：科技成果必須轉化為管理與業務成果。
+
+## 七、結論：可被信任的決策，比炫目的 AI 更重要
+
+從 BI 看見現況、AI 支援預測，到 Data Governance 確立資料可信與責任，三者不是互相取代，而是共同組成決策能力。**先定義要改善的決策，再定義指標與治理規則，最後選擇適合的技術**，比先買工具再找用途更接近資訊管理的思考方式。
+
+## References
+
+1. [Microsoft Learn, *Understand star schema and the importance for Power BI*](https://learn.microsoft.com/en-us/power-bi/guidance/star-schema)（事實表／維度表與資料模型）。
+2. [IBM, *What Is Data Governance?*](https://www.ibm.com/think/topics/data-governance)（治理架構與權責）。
+3. [IBM, *What Is Data Stewardship?*](https://www.ibm.com/think/topics/data-stewardship)（資料管理角色與日常責任）。
+4. [Uber Engineering, *Databook: Turning Big Data into Knowledge with Metadata*, 2018-08-03](https://www.uber.com/gb/en/blog/databook/)。
+5. [Uber Engineering, *Turning Metadata Into Insights with Databook*, 2020-11-10](https://www.uber.com/us/en/blog/metadata-insights-databook/)。
+6. [Uber Engineering, *Meet Michelangelo*, 2017-09-05](https://www.uber.com/gb/en/blog/michelangelo-machine-learning-platform/)。
+7. [NIST, *AI Risk Management Framework Core*](https://airc.nist.gov/airmf-resources/airmf/5-sec-core/)（GOVERN／MAP／MEASURE／MANAGE）。
